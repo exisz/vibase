@@ -1,5 +1,5 @@
 {
-  "name": "agentbase",
+  "name": "@exisz/agentbase",
   "version": "0.1.0",
   "description": "Agent Database — persistent state for AI agents. Multi-vendor board CLI (Trello, Markdown).",
   "main": "dist/index.js",

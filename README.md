@@ -11,7 +11,7 @@
 
 **Agent Database — persistent state for AI agents. Zero dependencies.**
 
-[![npm](https://img.shields.io/npm/v/agentbase)](https://www.npmjs.com/package/agentbase)
+[![npm](https://img.shields.io/npm/v/@exisz/agentbase)](https://www.npmjs.com/package/@exisz/agentbase)
 [![License](https://img.shields.io/github/license/exisz/agentbase)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/exisz/agentbase/ci.yml)](https://github.com/exisz/agentbase/actions)
 [![Node](https://img.shields.io/node/v/agentbase)](https://nodejs.org)
@@ -36,7 +36,7 @@ AI agents interacting with Trello (or any board tool) create **duplicate cards c
 | **Managed records** | ✅ Built-in dedup | ❌ | ❌ |
 | **Agent-safe** | ✅ Upsert by key | ❌ | ❌ |
 | **Snapshot** | ✅ Vendor-agnostic YAML | ❌ | ❌ |
-| **Install** | `npm i -g agentbase` | `npm install` | `brew` / stack |
+| **Install** | `npm i -g @exisz/agentbase` | `npm install` | `brew` / stack |
 
 ## Installation
 
