@@ -29,12 +29,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gotexis/agentbase.git"
+    "url": "git+https://github.com/exisz/agentbase.git"
   },
   "bugs": {
-    "url": "https://github.com/gotexis/agentbase/issues"
+    "url": "https://github.com/exisz/agentbase/issues"
   },
-  "homepage": "https://github.com/gotexis/agentbase#readme",
+  "homepage": "https://github.com/exisz/agentbase#readme",
   "engines": {
     "node": ">=18"
   },

@@ -12,8 +12,8 @@
 **Agent Database — persistent state for AI agents. Zero dependencies.**
 
 [![npm](https://img.shields.io/npm/v/agentbase)](https://www.npmjs.com/package/agentbase)
-[![License](https://img.shields.io/github/license/gotexis/agentbase)](LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/gotexis/agentbase/ci.yml)](https://github.com/gotexis/agentbase/actions)
+[![License](https://img.shields.io/github/license/exisz/agentbase)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/exisz/agentbase/ci.yml)](https://github.com/exisz/agentbase/actions)
 [![Node](https://img.shields.io/node/v/agentbase)](https://nodejs.org)
 
 [Installation](#installation) · [Quick Start](#quick-start) · [Commands](#commands) · [Configuration](#configuration) · [Managed Records](#managed-records) · [Contributing](CONTRIBUTING.md)
@@ -48,7 +48,7 @@ npm install -g agentbase
 npx agentbase help
 
 # From source
-git clone https://github.com/gotexis/agentbase.git
+git clone https://github.com/exisz/agentbase.git
 cd agentbase
 npm install && npm run build && npm link
 ```

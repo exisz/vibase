@@ -6,7 +6,7 @@ Thanks for your interest in contributing! agentbase is a zero-dependency TypeScr
 
 ```bash
 # Clone
-git clone https://github.com/gotexis/agentbase.git
+git clone https://github.com/exisz/agentbase.git
 cd agentbase
 
 # Install dev dependencies
@@ -101,7 +101,7 @@ refactor: extract vendor adapter interface
 
 ## Reporting Bugs
 
-Use [GitHub Issues](https://github.com/gotexis/agentbase/issues). Include:
+Use [GitHub Issues](https://github.com/exisz/agentbase/issues). Include:
 
 - Your Node.js version (`node --version`)
 - agentbase version (`agentbase version`)
@@ -111,7 +111,7 @@ Use [GitHub Issues](https://github.com/gotexis/agentbase/issues). Include:
 
 ## Requesting Features
 
-Use [GitHub Issues](https://github.com/gotexis/agentbase/issues). Explain:
+Use [GitHub Issues](https://github.com/exisz/agentbase/issues). Explain:
 
 - What problem does this solve?
 - How do you currently work around it?

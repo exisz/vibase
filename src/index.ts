@@ -146,7 +146,7 @@ ENVIRONMENT
   TRELLO_TOKEN  — Trello API token (for Trello vendor)
 
 DOCS
-  https://github.com/gotexis/agentbase
+  https://github.com/exisz/agentbase
 `);
 }
 
