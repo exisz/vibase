@@ -1,5 +1,5 @@
 /**
- * Managed records — load/save .agentbase/managed.yaml
+ * Managed records — load/save .agentfile/managed.yaml
  * The killer feature: dedup registry that prevents agents from creating duplicate cards.
  */
 
@@ -11,10 +11,10 @@ import type { ManagedData, ManagedRecord } from './types.js';
 const MANAGED_FILE = 'managed.yaml';
 
 /**
- * Load managed.yaml from .agentbase/ directory.
+ * Load managed.yaml from .agentfile/ directory.
  */
-export function loadManaged(agentbaseDir: string): ManagedData {
-  const path = join(agentbaseDir, MANAGED_FILE);
+export function loadManaged(agentfileDir: string): ManagedData {
+  const path = join(agentfileDir, MANAGED_FILE);
   if (!existsSync(path)) {
     return { records: [] };
   }
@@ -25,15 +25,15 @@ export function loadManaged(agentbaseDir: string): ManagedData {
 }
 
 /**
- * Save managed.yaml to .agentbase/ directory.
+ * Save managed.yaml to .agentfile/ directory.
  */
-export function saveManaged(agentbaseDir: string, data: ManagedData): void {
-  const path = join(agentbaseDir, MANAGED_FILE);
-  if (!existsSync(agentbaseDir)) {
-    mkdirSync(agentbaseDir, { recursive: true });
+export function saveManaged(agentfileDir: string, data: ManagedData): void {
+  const path = join(agentfileDir, MANAGED_FILE);
+  if (!existsSync(agentfileDir)) {
+    mkdirSync(agentfileDir, { recursive: true });
   }
 
-  const header = '# Auto-maintained by agentbase. Maps local keys → remote record IDs.\n';
+  const header = '# Auto-maintained by agentfile. Maps local keys → remote record IDs.\n';
   const yaml = toYaml(data);
   writeFileSync(path, header + yaml + '\n', 'utf-8');
 }

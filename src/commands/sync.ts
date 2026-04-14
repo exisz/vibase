@@ -2,17 +2,17 @@
  * Sync command — sync managed.yaml with remote state
  */
 
-import type { VendorAdapter, AgentbaseConfig } from '../types.js';
+import type { VendorAdapter, AgentfileConfig } from '../types.js';
 import { loadManaged, saveManaged } from '../managed.js';
-import { getAgentbaseDir } from '../config.js';
+import { getAgentfileDir } from '../config.js';
 
 export async function cmdSync(
   adapter: VendorAdapter,
-  config: AgentbaseConfig,
+  config: AgentfileConfig,
   configDir: string
 ): Promise<void> {
-  const agentbaseDir = getAgentbaseDir(configDir);
-  const managed = loadManaged(agentbaseDir);
+  const agentfileDir = getAgentfileDir(configDir);
+  const managed = loadManaged(agentfileDir);
 
   if (!managed.records || managed.records.length === 0) {
     console.log('No managed records to sync.');
@@ -38,6 +38,6 @@ export async function cmdSync(
     }
   }
 
-  saveManaged(agentbaseDir, managed);
+  saveManaged(agentfileDir, managed);
   console.log(JSON.stringify({ synced: managed.records.length, updated, errors }, null, 2));
 }

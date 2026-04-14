@@ -1,13 +1,13 @@
-# Contributing to agentbase
+# Contributing to agentfile
 
-Thanks for your interest in contributing! agentbase is a zero-dependency TypeScript CLI, and we'd love your help making it better.
+Thanks for your interest in contributing! agentfile is a zero-dependency TypeScript CLI, and we'd love your help making it better.
 
 ## Development Setup
 
 ```bash
 # Clone
-git clone https://github.com/exisz/agentbase.git
-cd agentbase
+git clone https://github.com/exisz/agentfile.git
+cd agentfile
 
 # Install dev dependencies
 npm install
@@ -19,7 +19,7 @@ npm run build
 npm link
 
 # Run
-agentbase help
+agentfile help
 ```
 
 ## Project Structure
@@ -28,8 +28,8 @@ agentbase help
 src/
 ├── index.ts                 # CLI entry point + arg parsing
 ├── types.ts                 # Board, List, Card, VendorAdapter interfaces
-├── config.ts                # Config loader (.agentbase/agentbase.yml)
-├── managed.ts               # Managed record registry (.agentbase/managed.yaml)
+├── config.ts                # Config loader (.agentfile/agentfile.yml)
+├── managed.ts               # Managed record registry (.agentfile/managed.yaml)
 ├── yaml.ts                  # Minimal YAML parser/serializer (zero deps)
 ├── commands/
 │   ├── boards.ts            # boards command
@@ -48,7 +48,7 @@ src/
 
 ## The Golden Rule: Zero Runtime Dependencies
 
-agentbase uses **only Node.js built-ins**. No exceptions. This is the project's core differentiator.
+agentfile uses **only Node.js built-ins**. No exceptions. This is the project's core differentiator.
 
 - HTTP? `fetch` (built-in since Node 18)
 - YAML? Custom minimal parser in `yaml.ts`
@@ -101,17 +101,17 @@ refactor: extract vendor adapter interface
 
 ## Reporting Bugs
 
-Use [GitHub Issues](https://github.com/exisz/agentbase/issues). Include:
+Use [GitHub Issues](https://github.com/exisz/agentfile/issues). Include:
 
 - Your Node.js version (`node --version`)
-- agentbase version (`agentbase version`)
+- agentfile version (`agentfile version`)
 - Your OS
 - Full error output
 - Steps to reproduce
 
 ## Requesting Features
 
-Use [GitHub Issues](https://github.com/exisz/agentbase/issues). Explain:
+Use [GitHub Issues](https://github.com/exisz/agentfile/issues). Explain:
 
 - What problem does this solve?
 - How do you currently work around it?

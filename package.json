@@ -1,10 +1,10 @@
 {
-  "name": "@exisz/agentbase",
+  "name": "@exisz/agentfile",
   "version": "0.1.0",
-  "description": "Agent Database — persistent state for AI agents. Multi-vendor board CLI (Trello, Markdown).",
+  "description": "Agent File — persistent state for AI agents. Multi-vendor board CLI (Trello, Markdown).",
   "main": "dist/index.js",
   "bin": {
-    "agentbase": "dist/index.js"
+    "agentfile": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -29,12 +29,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/exisz/agentbase.git"
+    "url": "git+https://github.com/exisz/agentfile.git"
   },
   "bugs": {
-    "url": "https://github.com/exisz/agentbase/issues"
+    "url": "https://github.com/exisz/agentfile/issues"
   },
-  "homepage": "https://github.com/exisz/agentbase#readme",
+  "homepage": "https://github.com/exisz/agentfile#readme",
   "engines": {
     "node": ">=18"
   },

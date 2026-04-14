@@ -3,11 +3,11 @@
  */
 
 import { loadManaged } from '../managed.js';
-import { getAgentbaseDir } from '../config.js';
+import { getAgentfileDir } from '../config.js';
 
 export async function cmdManaged(configDir: string): Promise<void> {
-  const agentbaseDir = getAgentbaseDir(configDir);
-  const managed = loadManaged(agentbaseDir);
+  const agentfileDir = getAgentfileDir(configDir);
+  const managed = loadManaged(agentfileDir);
 
   if (!managed.records || managed.records.length === 0) {
     console.log('No managed records.');

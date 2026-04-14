@@ -1,20 +1,20 @@
 <div align="center">
 
 ```
-                           _   _
-   __ _  __ _  ___ _ __ | |_| |__   __ _ ___  ___
-  / _` |/ _` |/ _ \ '_ \| __| '_ \ / _` / __|/ _ \
- | (_| | (_| |  __/ | | | |_| |_) | (_| \__ \  __/
-  \__,_|\__, |\___|_| |_|\__|_.__/ \__,_|___/\___|
+                           _    __ _ _
+   __ _  __ _  ___ _ __ | |_ / _(_) | ___
+  / _` |/ _` |/ _ \ '_ \| __| |_| | |/ _ \
+ | (_| | (_| |  __/ | | | |_|  _| | |  __/
+  \__,_|\__, |\___|_| |_|\__|_| |_|_|\___|
         |___/
 ```
 
-**Agent Database — persistent state for AI agents. Zero dependencies.**
+**Agent File — persistent state for AI agents. Zero dependencies.**
 
-[![npm](https://img.shields.io/npm/v/@exisz/agentbase)](https://www.npmjs.com/package/@exisz/agentbase)
-[![License](https://img.shields.io/github/license/exisz/agentbase)](LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/exisz/agentbase/ci.yml)](https://github.com/exisz/agentbase/actions)
-[![Node](https://img.shields.io/node/v/agentbase)](https://nodejs.org)
+[![npm](https://img.shields.io/npm/v/@exisz/agentfile)](https://www.npmjs.com/package/@exisz/agentfile)
+[![License](https://img.shields.io/github/license/exisz/agentfile)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/exisz/agentfile/ci.yml)](https://github.com/exisz/agentfile/actions)
+[![Node](https://img.shields.io/node/v/agentfile)](https://nodejs.org)
 
 [Installation](#installation) · [Quick Start](#quick-start) · [Commands](#commands) · [Configuration](#configuration) · [Managed Records](#managed-records) · [Contributing](CONTRIBUTING.md)
 
@@ -22,13 +22,13 @@
 
 ---
 
-## Why agentbase?
+## Why agentfile?
 
 AI agents interacting with Trello (or any board tool) create **duplicate cards constantly** — they can't remember what they already created. Existing CLIs are vendor-locked, dependency-heavy, or abandoned.
 
-**agentbase** is an agent-first database CLI. One interface, multiple backends, zero vendor lock-in. Its killer feature: **managed records** — a local registry that prevents duplicate creation. Agents upsert by key; agentbase handles the rest.
+**agentfile** is an agent-first database CLI. One interface, multiple backends, zero vendor lock-in. Its killer feature: **managed records** — a local registry that prevents duplicate creation. Agents upsert by key; agentfile handles the rest.
 
-| | agentbase | [trello-cli](https://github.com/mheap/trello-cli) | [taskell](https://github.com/smallhadroncollider/taskell) |
+| | agentfile | [trello-cli](https://github.com/mheap/trello-cli) | [taskell](https://github.com/smallhadroncollider/taskell) |
 |---|---|---|---|
 | **Language** | TypeScript | TypeScript | Haskell |
 | **Runtime deps** | **0** | Many | Many |
@@ -36,20 +36,20 @@ AI agents interacting with Trello (or any board tool) create **duplicate cards c
 | **Managed records** | ✅ Built-in dedup | ❌ | ❌ |
 | **Agent-safe** | ✅ Upsert by key | ❌ | ❌ |
 | **Snapshot** | ✅ Vendor-agnostic YAML | ❌ | ❌ |
-| **Install** | `npm i -g @exisz/agentbase` | `npm install` | `brew` / stack |
+| **Install** | `npm i -g @exisz/agentfile` | `npm install` | `brew` / stack |
 
 ## Installation
 
 ```bash
 # npm (recommended)
-npm install -g agentbase
+npm install -g agentfile
 
 # npx (no install)
-npx agentbase help
+npx agentfile help
 
 # From source
-git clone https://github.com/exisz/agentbase.git
-cd agentbase
+git clone https://github.com/exisz/agentfile.git
+cd agentfile
 npm install && npm run build && npm link
 ```
 
@@ -58,8 +58,8 @@ npm install && npm run build && npm link
 ### 1. Create a config
 
 ```bash
-mkdir -p .agentbase
-cat > .agentbase/agentbase.yml << 'EOF'
+mkdir -p .agentfile
+cat > .agentfile/agentfile.yml << 'EOF'
 vendor: trello
 trello:
   board_id: "your-board-id"
@@ -77,25 +77,25 @@ export TRELLO_TOKEN="your-trello-token"
 
 ```bash
 # List your boards
-agentbase boards
+agentfile boards
 
 # List cards on configured board
-agentbase cards
+agentfile cards
 
 # Create a card
-agentbase card:create -l LIST_ID -n "Fix login bug" -d "Users can't log in on mobile"
+agentfile card:create -l LIST_ID -n "Fix login bug" -d "Users can't log in on mobile"
 
 # The killer feature — upsert by key (never creates duplicates)
-agentbase upsert --key "sprint-review" -l LIST_ID -n "Sprint Review" -d "Updated notes..."
+agentfile upsert --key "sprint-review" -l LIST_ID -n "Sprint Review" -d "Updated notes..."
 # Run again → updates instead of creating a duplicate
-agentbase upsert --key "sprint-review" -l LIST_ID -n "Sprint Review v2" -d "Final notes"
+agentfile upsert --key "sprint-review" -l LIST_ID -n "Sprint Review v2" -d "Final notes"
 ```
 
 ### Using Markdown backend (no SaaS needed)
 
 ```bash
-mkdir -p .agentbase
-cat > .agentbase/agentbase.yml << 'EOF'
+mkdir -p .agentfile
+cat > .agentfile/agentfile.yml << 'EOF'
 vendor: markdown
 markdown:
   dir: ./boards
@@ -105,8 +105,8 @@ EOF
 mkdir -p boards/my-project/{todo,in-progress,done}
 
 # Now use the same commands — data lives in local files
-agentbase cards -b my-project
-agentbase card:create -b my-project -l "my-project/todo" -n "Build feature X"
+agentfile cards -b my-project
+agentfile card:create -b my-project -l "my-project/todo" -n "Build feature X"
 ```
 
 ## Commands
@@ -114,51 +114,51 @@ agentbase card:create -b my-project -l "my-project/todo" -n "Build feature X"
 ### Board Operations
 
 ```bash
-agentbase boards                              # List all boards
-agentbase lists [-b BOARD]                    # List all lists
-agentbase labels [-b BOARD]                   # List labels
+agentfile boards                              # List all boards
+agentfile lists [-b BOARD]                    # List all lists
+agentfile labels [-b BOARD]                   # List labels
 ```
 
 ### Card Operations
 
 ```bash
-agentbase cards [-b BOARD] [-l LIST]          # List cards
-agentbase card CARD_ID                        # Show card details
-agentbase card:create -l LIST -n "Name" [-d "Desc"] [--due DATE] [--label LABEL]
-agentbase card:update CARD_ID [-n "Name"] [-d "Desc"] [--move-to LIST]
-agentbase card:move CARD_ID LIST_ID           # Move card to list
-agentbase card:archive CARD_ID                # Archive card
-agentbase card:comment CARD_ID "text"         # Add comment
+agentfile cards [-b BOARD] [-l LIST]          # List cards
+agentfile card CARD_ID                        # Show card details
+agentfile card:create -l LIST -n "Name" [-d "Desc"] [--due DATE] [--label LABEL]
+agentfile card:update CARD_ID [-n "Name"] [-d "Desc"] [--move-to LIST]
+agentfile card:move CARD_ID LIST_ID           # Move card to list
+agentfile card:archive CARD_ID                # Archive card
+agentfile card:comment CARD_ID "text"         # Add comment
 ```
 
 ### Managed Records (the killer feature)
 
 ```bash
 # Upsert: create if key doesn't exist, update if it does
-agentbase upsert --key "fy2025" -l LIST_ID -n "FY2025 Tax" -d "..."
+agentfile upsert --key "fy2025" -l LIST_ID -n "FY2025 Tax" -d "..."
 
 # View all managed records
-agentbase managed
+agentfile managed
 
 # Sync managed.yaml with remote state
-agentbase sync
+agentfile sync
 ```
 
 ### Export & Migration
 
 ```bash
-agentbase snapshot [-b BOARD] [-o FILE]       # Export board to YAML
-agentbase migrate:from-trello-yaml FILE       # Import from old trello.yaml
+agentfile snapshot [-b BOARD] [-o FILE]       # Export board to YAML
+agentfile migrate:from-trello-yaml FILE       # Import from old trello.yaml
 ```
 
 ## Configuration
 
-### Config file: `.agentbase/agentbase.yml`
+### Config file: `.agentfile/agentfile.yml`
 
-agentbase searches for config in this order:
-1. `.agentbase/agentbase.yml` in current directory
+agentfile searches for config in this order:
+1. `.agentfile/agentfile.yml` in current directory
 2. Walk up parent directories
-3. `~/.agentbase/agentbase.yml` (global fallback)
+3. `~/.agentfile/agentfile.yml` (global fallback)
 
 #### Trello vendor
 
@@ -184,10 +184,10 @@ No API keys needed. Data stored as local markdown files with YAML front matter.
 
 ## Managed Records
 
-The managed record registry (`.agentbase/managed.yaml`) is what makes agentbase agent-safe.
+The managed record registry (`.agentfile/managed.yaml`) is what makes agentfile agent-safe.
 
 ```yaml
-# Auto-maintained by agentbase
+# Auto-maintained by agentfile
 board:
   id: "69bdfa32041cfc3a4bc2c7ad"
   name: "My Board"
@@ -207,8 +207,8 @@ records:
 ```
 
 **How it works:**
-1. Agent calls `agentbase upsert --key "my-key" -l LIST -n "Name"`
-2. agentbase checks `managed.yaml` for key `"my-key"`
+1. Agent calls `agentfile upsert --key "my-key" -l LIST -n "Name"`
+2. agentfile checks `managed.yaml` for key `"my-key"`
 3. **Key exists** → UPDATE the remote record
 4. **Key missing** → CREATE new record + register in `managed.yaml`
 
@@ -216,7 +216,7 @@ No more duplicate cards. Ever.
 
 ## Vendor Adapters
 
-agentbase uses a vendor adapter pattern. Each backend implements the same interface:
+agentfile uses a vendor adapter pattern. Each backend implements the same interface:
 
 | Vendor | Backend | Auth | Status |
 |--------|---------|------|--------|
@@ -230,10 +230,10 @@ agentbase uses a vendor adapter pattern. Each backend implements the same interf
 If you're migrating from the old `board` CLI with `trello.yaml` files:
 
 ```bash
-agentbase migrate:from-trello-yaml ./trello.yaml
+agentfile migrate:from-trello-yaml ./trello.yaml
 ```
 
-This reads the old format and writes `.agentbase/managed.yaml` + `.agentbase/agentbase.yml`.
+This reads the old format and writes `.agentfile/managed.yaml` + `.agentfile/agentfile.yml`.
 
 ## License
 

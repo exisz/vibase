@@ -1,5 +1,5 @@
 /**
- * Minimal YAML parser — handles the subset needed for agentbase config.
+ * Minimal YAML parser — handles the subset needed for agentfile config.
  * Supports: strings, numbers, booleans, null, simple objects, arrays, nested objects.
  * Does NOT support: anchors, aliases, multi-line strings, flow sequences in complex cases.
  *

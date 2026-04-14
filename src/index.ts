@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * agentbase — Agent Database: Multi-Vendor Board CLI
+ * agentfile — Agent Database: Multi-Vendor Board CLI
  *
- * Usage: agentbase <command> [options]
+ * Usage: agentfile <command> [options]
  *
  * Commands:
  *   boards                           List boards
@@ -36,12 +36,12 @@ import { cmdManaged } from './commands/managed.js';
 import { cmdSync } from './commands/sync.js';
 import { cmdSnapshot } from './commands/snapshot.js';
 import { cmdMigrateFromTrelloYaml } from './commands/migrate.js';
-import type { VendorAdapter, AgentbaseConfig } from './types.js';
+import type { VendorAdapter, AgentfileConfig } from './types.js';
 import { resolve } from 'node:path';
 
 const VERSION = '0.1.0';
 
-function createAdapter(config: AgentbaseConfig, configDir: string): VendorAdapter {
+function createAdapter(config: AgentfileConfig, configDir: string): VendorAdapter {
   switch (config.vendor) {
     case 'trello':
       return new TrelloAdapter();
@@ -57,7 +57,7 @@ function createAdapter(config: AgentbaseConfig, configDir: string): VendorAdapte
   }
 }
 
-function getBoardId(config: AgentbaseConfig, args: string[]): string {
+function getBoardId(config: AgentfileConfig, args: string[]): string {
   // Check for -b / --board flag
   const bIdx = args.indexOf('-b');
   const bLongIdx = args.indexOf('--board');
@@ -107,10 +107,10 @@ function getMultiFlag(args: string[], short: string, long: string): string[] {
 
 function printHelp(): void {
   console.log(`
-agentbase — Agent Database: persistent state for AI agents
+agentfile — Agent Database: persistent state for AI agents
 
 USAGE
-  agentbase <command> [options]
+  agentfile <command> [options]
 
 COMMANDS
   boards                              List boards
@@ -135,7 +135,7 @@ COMMANDS
   help                                Show this help
 
 CONFIG
-  Place .agentbase/agentbase.yml in your project root or ~/.agentbase/
+  Place .agentfile/agentfile.yml in your project root or ~/.agentfile/
 
   vendor: trello
   trello:
@@ -146,7 +146,7 @@ ENVIRONMENT
   TRELLO_TOKEN  — Trello API token (for Trello vendor)
 
 DOCS
-  https://github.com/exisz/agentbase
+  https://github.com/exisz/agentfile
 `);
 }
 
@@ -160,7 +160,7 @@ async function main(): Promise<void> {
   }
 
   if (command === 'version' || command === '--version' || command === '-v') {
-    console.log(`agentbase v${VERSION}`);
+    console.log(`agentfile v${VERSION}`);
     process.exit(0);
   }
 
@@ -168,7 +168,7 @@ async function main(): Promise<void> {
   if (command === 'migrate:from-trello-yaml') {
     const file = args[1];
     if (!file) {
-      console.error('Usage: agentbase migrate:from-trello-yaml <FILE>');
+      console.error('Usage: agentfile migrate:from-trello-yaml <FILE>');
       process.exit(1);
     }
     await cmdMigrateFromTrelloYaml(file, process.cwd());
@@ -206,7 +206,7 @@ async function main(): Promise<void> {
     case 'card': {
       const cardId = args[1];
       if (!cardId) {
-        console.error('Usage: agentbase card <CARD_ID>');
+        console.error('Usage: agentfile card <CARD_ID>');
         process.exit(1);
       }
       await cmdCard(adapter, cardId);
@@ -217,7 +217,7 @@ async function main(): Promise<void> {
       const listId = getFlag(args, '-l', '--list');
       const name = getFlag(args, '-n', '--name');
       if (!listId || !name) {
-        console.error('Usage: agentbase card:create -l LIST -n NAME [-d DESC] [--due DATE] [--label LABEL]');
+        console.error('Usage: agentfile card:create -l LIST -n NAME [-d DESC] [--due DATE] [--label LABEL]');
         process.exit(1);
       }
       const desc = getFlag(args, '-d', '--desc');
@@ -231,7 +231,7 @@ async function main(): Promise<void> {
     case 'card:update': {
       const cardId = args[1];
       if (!cardId) {
-        console.error('Usage: agentbase card:update <CARD_ID> [-n NAME] [-d DESC] [--due DATE] [--move-to LIST]');
+        console.error('Usage: agentfile card:update <CARD_ID> [-n NAME] [-d DESC] [--due DATE] [--move-to LIST]');
         process.exit(1);
       }
       const name = getFlag(args, '-n', '--name');
@@ -246,7 +246,7 @@ async function main(): Promise<void> {
       const cardId = args[1];
       const listId = args[2];
       if (!cardId || !listId) {
-        console.error('Usage: agentbase card:move <CARD_ID> <LIST_ID>');
+        console.error('Usage: agentfile card:move <CARD_ID> <LIST_ID>');
         process.exit(1);
       }
       await cmdCardMove(adapter, cardId, listId);
@@ -256,7 +256,7 @@ async function main(): Promise<void> {
     case 'card:archive': {
       const cardId = args[1];
       if (!cardId) {
-        console.error('Usage: agentbase card:archive <CARD_ID>');
+        console.error('Usage: agentfile card:archive <CARD_ID>');
         process.exit(1);
       }
       await cmdCardArchive(adapter, cardId);
@@ -267,7 +267,7 @@ async function main(): Promise<void> {
       const cardId = args[1];
       const text = args[2];
       if (!cardId || !text) {
-        console.error('Usage: agentbase card:comment <CARD_ID> <TEXT>');
+        console.error('Usage: agentfile card:comment <CARD_ID> <TEXT>');
         process.exit(1);
       }
       await cmdCardComment(adapter, cardId, text);
@@ -279,7 +279,7 @@ async function main(): Promise<void> {
       const listId = getFlag(args, '-l', '--list');
       const name = getFlag(args, '-n', '--name');
       if (!key || !listId || !name) {
-        console.error('Usage: agentbase upsert --key KEY -l LIST -n NAME [-d DESC]');
+        console.error('Usage: agentfile upsert --key KEY -l LIST -n NAME [-d DESC]');
         process.exit(1);
       }
       const desc = getFlag(args, '-d', '--desc');
@@ -306,7 +306,7 @@ async function main(): Promise<void> {
 
     default:
       console.error(`Unknown command: ${command}`);
-      console.error('Run "agentbase help" for usage');
+      console.error('Run "agentfile help" for usage');
       process.exit(1);
   }
 }

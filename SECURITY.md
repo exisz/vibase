@@ -18,8 +18,8 @@ We will respond within 48 hours and work on a fix.
 
 ## Security Considerations
 
-- agentbase stores Trello API credentials in environment variables (`TRELLO_KEY`, `TRELLO_TOKEN`)
+- agentfile stores Trello API credentials in environment variables (`TRELLO_KEY`, `TRELLO_TOKEN`)
 - Credentials are never logged or transmitted except to configured vendor APIs
-- The `.agentbase/managed.yaml` file contains record IDs — treat it as non-sensitive metadata
+- The `.agentfile/managed.yaml` file contains record IDs — treat it as non-sensitive metadata
 - Always use HTTPS endpoints (Trello API uses HTTPS by default)
 - For markdown vendor, data is stored as local files with your system's file permissions

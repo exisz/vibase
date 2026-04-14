@@ -1,21 +1,21 @@
 ---
-name: agentbase
-description: "Agent Database — persistent state for AI agents. Multi-vendor board CLI (Trello, Markdown). Zero dependencies."
+name: agentfile
+description: "Agent File — persistent state for AI agents. Multi-vendor board CLI (Trello, Markdown). Zero dependencies."
 ---
 
-# agentbase — Agent Database CLI Skill
+# agentfile — Agent File CLI Skill
 
-Use `agentbase` CLI for board/card operations. Zero-dependency Node.js CLI supporting Trello and local Markdown backends.
+Use `agentfile` CLI for board/card operations. Zero-dependency Node.js CLI supporting Trello and local Markdown backends.
 
 ## Setup
 
 ```bash
-npm install -g agentbase
+npm install -g agentfile
 ```
 
 ## Configuration
 
-Place `.agentbase/agentbase.yml` in your project root (or `~/.agentbase/`).
+Place `.agentfile/agentfile.yml` in your project root (or `~/.agentfile/`).
 
 ### Trello Vendor
 ```yaml
@@ -49,66 +49,66 @@ boards/
 
 ### Listing
 ```bash
-agentbase boards                       # List boards
-agentbase lists                        # List all lists on configured board
-agentbase lists -b BOARD_ID            # List lists on specific board
-agentbase labels                       # List labels
-agentbase cards                        # List all cards
-agentbase cards -l LIST_ID             # Cards in a specific list
-agentbase card CARD_ID                 # Show card details
+agentfile boards                       # List boards
+agentfile lists                        # List all lists on configured board
+agentfile lists -b BOARD_ID            # List lists on specific board
+agentfile labels                       # List labels
+agentfile cards                        # List all cards
+agentfile cards -l LIST_ID             # Cards in a specific list
+agentfile card CARD_ID                 # Show card details
 ```
 
 ### Creating & Updating
 ```bash
-agentbase card:create -l LIST_ID -n "Card Name" -d "Description" --due 2025-01-01 --label bug
-agentbase card:update CARD_ID -n "New Name" -d "New desc" --due 2025-02-01
-agentbase card:move CARD_ID LIST_ID    # Move card to list
-agentbase card:archive CARD_ID         # Archive card
-agentbase card:comment CARD_ID "Comment text"
+agentfile card:create -l LIST_ID -n "Card Name" -d "Description" --due 2025-01-01 --label bug
+agentfile card:update CARD_ID -n "New Name" -d "New desc" --due 2025-02-01
+agentfile card:move CARD_ID LIST_ID    # Move card to list
+agentfile card:archive CARD_ID         # Archive card
+agentfile card:comment CARD_ID "Comment text"
 ```
 
 ### Upsert (Killer Feature)
 ```bash
-agentbase upsert --key "unique-key" -l LIST_ID -n "Card Name" -d "Description"
+agentfile upsert --key "unique-key" -l LIST_ID -n "Card Name" -d "Description"
 ```
 
-If the key exists in `.agentbase/managed.yaml` → **UPDATE** the existing card.
+If the key exists in `.agentfile/managed.yaml` → **UPDATE** the existing card.
 If the key doesn't exist → **CREATE** a new card and register it.
 
 This prevents agents from creating duplicate cards on every run.
 
 ### Managed Records
 ```bash
-agentbase managed                      # Show all managed records (key → card mapping)
-agentbase sync                         # Sync managed.yaml with remote state
+agentfile managed                      # Show all managed records (key → card mapping)
+agentfile sync                         # Sync managed.yaml with remote state
 ```
 
 ### Snapshots
 ```bash
-agentbase snapshot                     # Export board to board-snapshot.yaml
-agentbase snapshot -o ./my-snapshot.yaml
+agentfile snapshot                     # Export board to board-snapshot.yaml
+agentfile snapshot -o ./my-snapshot.yaml
 ```
 
 ### Migration from Legacy
 ```bash
-agentbase migrate:from-trello-yaml ./trello.yaml
+agentfile migrate:from-trello-yaml ./trello.yaml
 ```
 
-Imports records from old `trello.yaml` format into `.agentbase/managed.yaml` and creates a basic config.
+Imports records from old `trello.yaml` format into `.agentfile/managed.yaml` and creates a basic config.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `.agentbase/agentbase.yml` | Config (vendor, board_id, etc.) |
-| `.agentbase/managed.yaml` | Dedup registry (key → remote card ID) |
+| `.agentfile/agentfile.yml` | Config (vendor, board_id, etc.) |
+| `.agentfile/managed.yaml` | Dedup registry (key → remote card ID) |
 
 ## Key Features
 
 - **Zero runtime dependencies** — pure Node.js built-ins only
 - **Upsert dedup** — prevents duplicate cards across agent runs
 - **Multi-vendor** — Trello API + local Markdown files
-- **Config walk** — searches current dir → parent dirs → `~/.agentbase/`
+- **Config walk** — searches current dir → parent dirs → `~/.agentfile/`
 - **Snapshot export** — dump entire board to YAML for version control
 
 ## Vendor Comparison
@@ -123,5 +123,6 @@ Imports records from old `trello.yaml` format into `.agentbase/managed.yaml` and
 
 ## ⚠️ Deprecation Notice
 
-- `board` CLI is **deprecated**. Use `agentbase` instead.
-- Per-workspace `trello.yaml` files should be migrated: `agentbase migrate:from-trello-yaml ./trello.yaml`
+- `board` CLI is **deprecated**. Use `agentfile` instead.
+- `agentbase` CLI is **deprecated**. Use `agentfile` instead.
+- Per-workspace `trello.yaml` files should be migrated: `agentfile migrate:from-trello-yaml ./trello.yaml`
