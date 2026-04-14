@@ -1,0 +1,50 @@
+{
+  "name": "agentbase",
+  "version": "0.1.0",
+  "description": "Agent Database — persistent state for AI agents. Multi-vendor board CLI (Trello, Markdown).",
+  "main": "dist/index.js",
+  "bin": {
+    "agentbase": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/**/*.test.js",
+    "pretest": "npm run build",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "agent",
+    "database",
+    "kanban",
+    "board",
+    "trello",
+    "markdown",
+    "cli",
+    "ai-agent",
+    "state-management",
+    "dedup"
+  ],
+  "author": "Exis Z",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gotexis/agentbase.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gotexis/agentbase/issues"
+  },
+  "homepage": "https://github.com/gotexis/agentbase#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}
