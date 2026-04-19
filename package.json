@@ -1,6 +1,6 @@
 {
   "name": "@exisz/agentbase",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Agent Database — persistent state for AI agents. Multi-vendor board CLI (Trello, Markdown).",
   "main": "dist/index.js",
   "bin": {
