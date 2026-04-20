@@ -1,0 +1,9 @@
+id: dna://tool/agentbase
+type: tool
+title: agentbase — Board tracking CLI
+description: Agent board tracking CLI. Main command is `board`. NPM package @exisz/agentbase.
+command: board
+package_name: "@exisz/agentbase"
+homepage: https://github.com/exisz/agentbase
+status: active
+managed_by: dna://agent/nebula
