@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { parseYaml, toYaml } from './yaml.js';
-import type { ManagedData, ManagedRecord } from './types.js';
+import type { ManagedData, ManagedRecord, Resolution } from './types.js';
 
 const MANAGED_FILE = 'managed.yaml';
 
@@ -67,3 +67,5 @@ export function updateRecord(data: ManagedData, key: string, updates: Partial<Ma
   Object.assign(record, updates);
   return true;
 }
+
+

@@ -36,6 +36,29 @@ export interface Label {
   color: string | null;
 }
 
+export interface Checklist {
+  id: string;
+  name: string;
+  cardId: string;
+  items: CheckItem[];
+}
+
+export interface CheckItem {
+  id: string;
+  name: string;
+  state: 'complete' | 'incomplete';
+  pos: number;
+  resolution?: string;
+}
+
+export interface Resolution {
+  cardId: string;
+  checkItemId: string;
+  itemName: string;
+  resolution: string;
+  checkedAt: string;
+}
+
 export interface ManagedRecord {
   key: string;
   recordId: string;
@@ -54,15 +77,23 @@ export interface ManagedData {
   records?: ManagedRecord[];
 }
 
+export interface BoardConfig {
+  id: string;
+  name: string;
+  alias?: string;
+}
+
 export interface AgentbaseConfig {
   vendor: string;
   trello?: {
     board_id: string;
+    boards?: BoardConfig[];
   };
   markdown?: {
     dir: string;
     format?: string;
   };
+  resolutions?: Resolution[];
 }
 
 export interface CardCreateOptions {
@@ -96,4 +127,10 @@ export interface VendorAdapter {
   cardArchive(cardId: string): Promise<Card>;
   cardComment(cardId: string, text: string): Promise<Comment>;
   snapshot(boardId: string): Promise<string>;
+  checklists(cardId: string): Promise<Checklist[]>;
+  checklistCreate(cardId: string, name: string): Promise<Checklist>;
+  checklistDelete(checklistId: string): Promise<void>;
+  checkItemAdd(checklistId: string, name: string, checked?: boolean): Promise<CheckItem>;
+  checkItemUpdate(cardId: string, checkItemId: string, opts: { name?: string; state?: 'complete' | 'incomplete' }): Promise<CheckItem>;
+  checkItemDelete(checklistId: string, checkItemId: string): Promise<void>;
 }

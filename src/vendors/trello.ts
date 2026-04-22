@@ -3,7 +3,7 @@
  * Uses Node.js native fetch (>=18). Auth via TRELLO_KEY + TRELLO_TOKEN env vars.
  */
 
-import type { VendorAdapter, Board, List, Card, Label, Comment, CardCreateOptions, CardUpdateOptions } from '../types.js';
+import type { VendorAdapter, Board, List, Card, Label, Comment, CardCreateOptions, CardUpdateOptions, Checklist, CheckItem } from '../types.js';
 
 const BASE = 'https://api.trello.com/1';
 
@@ -204,6 +204,64 @@ export class TrelloAdapter implements VendorAdapter {
     return { id: data.id as string };
   }
 
+  async checklists(cardId: string): Promise<Checklist[]> {
+    const data = await api('GET', `/cards/${cardId}/checklists`) as Array<Record<string, unknown>>;
+    return data.map(cl => ({
+      id: cl.id as string,
+      name: cl.name as string,
+      cardId: cl.idCard as string,
+      items: ((cl.checkItems as Array<Record<string, unknown>>) || []).map(ci => ({
+        id: ci.id as string,
+        name: ci.name as string,
+        state: ci.state as 'complete' | 'incomplete',
+        pos: ci.pos as number,
+      })).sort((a, b) => a.pos - b.pos),
+    }));
+  }
+
+  async checklistCreate(cardId: string, name: string): Promise<Checklist> {
+    const data = await api('POST', `/cards/${cardId}/checklists`, undefined, { name }) as Record<string, unknown>;
+    return {
+      id: data.id as string,
+      name: data.name as string,
+      cardId: data.idCard as string,
+      items: [],
+    };
+  }
+
+  async checklistDelete(checklistId: string): Promise<void> {
+    await api('DELETE', `/checklists/${checklistId}`);
+  }
+
+  async checkItemAdd(checklistId: string, name: string, checked?: boolean): Promise<CheckItem> {
+    const body: Record<string, string> = { name };
+    if (checked !== undefined) body.checked = String(checked);
+    const data = await api('POST', `/checklists/${checklistId}/checkItems`, undefined, body) as Record<string, unknown>;
+    return {
+      id: data.id as string,
+      name: data.name as string,
+      state: (data.state as string) === 'complete' ? 'complete' : 'incomplete',
+      pos: data.pos as number,
+    };
+  }
+
+  async checkItemUpdate(cardId: string, checkItemId: string, opts: { name?: string; state?: 'complete' | 'incomplete' }): Promise<CheckItem> {
+    const body: Record<string, string> = {};
+    if (opts.name) body.name = opts.name;
+    if (opts.state) body.state = opts.state;
+    const data = await api('PUT', `/cards/${cardId}/checkItem/${checkItemId}`, undefined, body) as Record<string, unknown>;
+    return {
+      id: data.id as string,
+      name: data.name as string,
+      state: (data.state as string) === 'complete' ? 'complete' : 'incomplete',
+      pos: data.pos as number,
+    };
+  }
+
+  async checkItemDelete(checklistId: string, checkItemId: string): Promise<void> {
+    await api('DELETE', `/checklists/${checklistId}/checkItems/${checkItemId}`);
+  }
+
   async snapshot(boardId: string): Promise<string> {
     const board = await api('GET', `/boards/${boardId}`, { fields: 'name' }) as Record<string, unknown>;
     const lists = await this.lists(boardId);
@@ -214,6 +272,13 @@ export class TrelloAdapter implements VendorAdapter {
       const list = cardsByList.get(c.listId) || [];
       list.push(c);
       cardsByList.set(c.listId, list);
+    }
+
+    // Fetch checklists for all cards
+    const checklistsByCard = new Map<string, Checklist[]>();
+    for (const c of allCards) {
+      const cls = await this.checklists(c.id);
+      if (cls.length > 0) checklistsByCard.set(c.id, cls);
     }
 
     const now = new Date().toISOString();
@@ -245,6 +310,24 @@ export class TrelloAdapter implements VendorAdapter {
           lines.push(`        due: ${JSON.stringify(c.due)}`);
           lines.push(`        labels: ${JSON.stringify(c.labels)}`);
           lines.push(`        pos: ${c.pos}`);
+          const cls = checklistsByCard.get(c.id);
+          if (cls && cls.length > 0) {
+            lines.push('        checklists:');
+            for (const cl of cls) {
+              lines.push(`          - id: "${cl.id}"`);
+              lines.push(`            name: "${escapeYaml(cl.name)}"`);
+              if (cl.items.length > 0) {
+                lines.push('            items:');
+                for (const ci of cl.items) {
+                  lines.push(`              - id: "${ci.id}"`);
+                  lines.push(`                name: "${escapeYaml(ci.name)}"`);
+                  lines.push(`                state: ${ci.state}`);
+                }
+              } else {
+                lines.push('            items: []');
+              }
+            }
+          }
         }
       } else {
         lines.push('    cards: []');

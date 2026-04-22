@@ -3,11 +3,11 @@
  * Search order: current dir → parent dirs → ~/.agentbase/agentbase.yml
  */
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { parseYaml } from './yaml.js';
-import type { AgentbaseConfig } from './types.js';
+import { parseYaml, toYaml } from './yaml.js';
+import type { AgentbaseConfig, Resolution } from './types.js';
 
 const CONFIG_DIR = '.agentbase';
 const CONFIG_FILE = 'agentbase.yml';
@@ -58,6 +58,53 @@ export function loadConfig(startDir?: string): { config: AgentbaseConfig; config
   const configDir = dirname(dirname(configPath));
 
   return { config: parsed, configDir };
+}
+
+/**
+ * Load config with full path info.
+ */
+export function loadFullConfig(startDir?: string): { config: AgentbaseConfig; configDir: string; configPath: string } {
+  const configPath = findConfigPath(startDir);
+  if (!configPath) {
+    console.error('Error: No .agentbase/agentbase.yml found.');
+    process.exit(1);
+  }
+  const raw = readFileSync(configPath, 'utf-8');
+  const parsed = parseYaml(raw) as unknown as AgentbaseConfig;
+  if (!parsed.vendor) {
+    console.error(`Error: "vendor" not set in ${configPath}`);
+    process.exit(1);
+  }
+  const configDir = dirname(dirname(configPath));
+  return { config: parsed, configDir, configPath };
+}
+
+/**
+ * Save config back to agentbase.yml.
+ */
+export function saveConfig(configPath: string, config: AgentbaseConfig): void {
+  const yaml = toYaml(config);
+  writeFileSync(configPath, yaml + '\n', 'utf-8');
+}
+
+/**
+ * Add a resolution record (upsert by checkItemId).
+ */
+export function addResolution(config: AgentbaseConfig, res: Resolution): void {
+  if (!config.resolutions) config.resolutions = [];
+  const idx = config.resolutions.findIndex(r => r.checkItemId === res.checkItemId);
+  if (idx >= 0) {
+    config.resolutions[idx] = res;
+  } else {
+    config.resolutions.push(res);
+  }
+}
+
+/**
+ * Get a resolution by checkItemId.
+ */
+export function getResolution(config: AgentbaseConfig, checkItemId: string): Resolution | undefined {
+  return config.resolutions?.find(r => r.checkItemId === checkItemId);
 }
 
 /**

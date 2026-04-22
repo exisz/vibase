@@ -22,7 +22,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlink
 import { join, basename, relative } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { parseYaml, toYaml } from '../yaml.js';
-import type { VendorAdapter, Board, List, Card, Label, Comment, CardCreateOptions, CardUpdateOptions } from '../types.js';
+import type { VendorAdapter, Board, List, Card, Label, Comment, CardCreateOptions, CardUpdateOptions, Checklist, CheckItem } from '../types.js';
 
 function slugify(name: string): string {
   return name
@@ -322,6 +322,118 @@ export class MarkdownAdapter implements VendorAdapter {
     }
 
     return { id: randomUUID().slice(0, 8), text };
+  }
+
+  async checklists(cardId: string): Promise<Checklist[]> {
+    const { meta } = await this._findCardFile(cardId);
+    const cls = (meta.checklists as Array<Record<string, unknown>>) || [];
+    return cls.map(cl => ({
+      id: cl.id as string,
+      name: cl.name as string,
+      cardId,
+      items: ((cl.items as Array<Record<string, unknown>>) || []).map(ci => ({
+        id: ci.id as string,
+        name: ci.name as string,
+        state: (ci.state as string) === 'complete' ? 'complete' as const : 'incomplete' as const,
+        pos: ci.pos as number || 0,
+        ...(ci.resolution ? { resolution: ci.resolution as string } : {}),
+      })),
+    }));
+  }
+
+  async checklistCreate(cardId: string, name: string): Promise<Checklist> {
+    const { meta, body, filePath } = await this._findCardFile(cardId);
+    const id = 'cl-' + randomUUID().slice(0, 8);
+    const cl = { id, name, items: [] };
+    if (!meta.checklists) meta.checklists = [];
+    (meta.checklists as Array<Record<string, unknown>>).push(cl);
+    writeFileSync(filePath, writeFrontMatter(meta, body), 'utf-8');
+    return { id, name, cardId, items: [] };
+  }
+
+  async checklistDelete(checklistId: string): Promise<void> {
+    const { meta, body, filePath } = await this._findCardFileByChecklist(checklistId);
+    meta.checklists = ((meta.checklists as Array<Record<string, unknown>>) || []).filter(cl => cl.id !== checklistId);
+    writeFileSync(filePath, writeFrontMatter(meta, body), 'utf-8');
+  }
+
+  async checkItemAdd(checklistId: string, name: string, checked?: boolean): Promise<CheckItem> {
+    const { meta, body, filePath } = await this._findCardFileByChecklist(checklistId);
+    const cls = (meta.checklists as Array<Record<string, unknown>>) || [];
+    const cl = cls.find(c => c.id === checklistId);
+    if (!cl) { console.error(`Checklist not found: ${checklistId}`); process.exit(1); }
+    if (!cl.items) cl.items = [];
+    const items = cl.items as Array<Record<string, unknown>>;
+    const id = 'ci-' + randomUUID().slice(0, 8);
+    const pos = (items.length + 1) * 100;
+    const state = checked ? 'complete' : 'incomplete';
+    items.push({ id, name, state, pos });
+    writeFileSync(filePath, writeFrontMatter(meta, body), 'utf-8');
+    return { id, name, state, pos };
+  }
+
+  async checkItemUpdate(cardId: string, checkItemId: string, opts: { name?: string; state?: 'complete' | 'incomplete' }): Promise<CheckItem> {
+    const { meta, body, filePath } = await this._findCardFile(cardId);
+    const cls = (meta.checklists as Array<Record<string, unknown>>) || [];
+    for (const cl of cls) {
+      const items = (cl.items as Array<Record<string, unknown>>) || [];
+      const item = items.find(i => i.id === checkItemId);
+      if (item) {
+        if (opts.name) item.name = opts.name;
+        if (opts.state) item.state = opts.state;
+        if ((opts as Record<string, unknown>).resolution) item.resolution = (opts as Record<string, unknown>).resolution;
+        writeFileSync(filePath, writeFrontMatter(meta, body), 'utf-8');
+        return { id: item.id as string, name: item.name as string, state: item.state as 'complete' | 'incomplete', pos: item.pos as number, resolution: item.resolution as string | undefined };
+      }
+    }
+    console.error(`Check item not found: ${checkItemId}`);
+    process.exit(1);
+  }
+
+  async checkItemDelete(checklistId: string, checkItemId: string): Promise<void> {
+    const { meta, body, filePath } = await this._findCardFileByChecklist(checklistId);
+    const cls = (meta.checklists as Array<Record<string, unknown>>) || [];
+    const cl = cls.find(c => c.id === checklistId);
+    if (!cl) { console.error(`Checklist not found: ${checklistId}`); process.exit(1); }
+    cl.items = ((cl.items as Array<Record<string, unknown>>) || []).filter(i => i.id !== checkItemId);
+    writeFileSync(filePath, writeFrontMatter(meta, body), 'utf-8');
+  }
+
+  private async _findCardFile(cardId: string): Promise<{ meta: Record<string, unknown>; body: string; filePath: string }> {
+    const boards = await this.boards();
+    for (const board of boards) {
+      const lists = await this.lists(board.id);
+      for (const list of lists) {
+        const listDir = join(this.baseDir, board.id, list.name);
+        for (const file of listMdFiles(listDir)) {
+          const filePath = join(listDir, file);
+          const content = readFileSync(filePath, 'utf-8');
+          const { meta, body } = parseFrontMatter(content);
+          if ((meta.id as string) === cardId) return { meta, body, filePath };
+        }
+      }
+    }
+    console.error(`Card not found: ${cardId}`);
+    process.exit(1);
+  }
+
+  private async _findCardFileByChecklist(checklistId: string): Promise<{ meta: Record<string, unknown>; body: string; filePath: string }> {
+    const boards = await this.boards();
+    for (const board of boards) {
+      const lists = await this.lists(board.id);
+      for (const list of lists) {
+        const listDir = join(this.baseDir, board.id, list.name);
+        for (const file of listMdFiles(listDir)) {
+          const filePath = join(listDir, file);
+          const content = readFileSync(filePath, 'utf-8');
+          const { meta, body } = parseFrontMatter(content);
+          const cls = (meta.checklists as Array<Record<string, unknown>>) || [];
+          if (cls.some(cl => cl.id === checklistId)) return { meta, body, filePath };
+        }
+      }
+    }
+    console.error(`Checklist not found: ${checklistId}`);
+    process.exit(1);
   }
 
   async snapshot(boardId: string): Promise<string> {

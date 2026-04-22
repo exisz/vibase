@@ -35,11 +35,12 @@ import { cmdUpsert } from './commands/upsert.js';
 import { cmdManaged } from './commands/managed.js';
 import { cmdSync } from './commands/sync.js';
 import { cmdSnapshot } from './commands/snapshot.js';
+import { cmdChecklists, cmdChecklistCreate, cmdChecklistDelete, cmdCheckItemAdd, cmdCheckItemUpdate, cmdCheckItemDelete } from './commands/checklists.js';
 import { cmdMigrateFromTrelloYaml } from './commands/migrate.js';
 import type { VendorAdapter, AgentbaseConfig } from './types.js';
 import { resolve } from 'node:path';
 
-const VERSION = '0.1.0';
+const VERSION = '0.3.0';
 
 function createAdapter(config: AgentbaseConfig, configDir: string): VendorAdapter {
   switch (config.vendor) {
@@ -58,19 +59,22 @@ function createAdapter(config: AgentbaseConfig, configDir: string): VendorAdapte
 }
 
 function getBoardId(config: AgentbaseConfig, args: string[]): string {
-  // Check for -b / --board flag
-  const bIdx = args.indexOf('-b');
-  const bLongIdx = args.indexOf('--board');
-  const idx = bIdx >= 0 ? bIdx : bLongIdx;
-
-  if (idx >= 0 && args[idx + 1]) {
-    return args[idx + 1];
+  const bFlag = getFlag(args, '-b', '--board');
+  if (bFlag) {
+    // Resolve alias or name against configured boards
+    const boards = config.trello?.boards || [];
+    const byAlias = boards.find(b => b.alias === bFlag);
+    if (byAlias) return byAlias.id;
+    const byName = boards.find(b => b.name.toLowerCase() === bFlag.toLowerCase());
+    if (byName) return byName.id;
+    // Assume raw board ID
+    return bFlag;
   }
 
   // Fall back to config
   if (config.trello?.board_id) return config.trello.board_id;
+  if (config.trello?.boards?.[0]) return config.trello.boards[0].id;
 
-  // For markdown vendor, use first board dir
   if (config.vendor === 'markdown') {
     console.error('Error: Board ID required. Use -b BOARD_ID');
     process.exit(1);
@@ -130,6 +134,15 @@ COMMANDS
   managed                             Show all managed records
   sync                                Sync managed.yaml with remote
   snapshot [-b BOARD] [-o FILE]       Export board to YAML
+  checklist:list <CARD_ID>            List checklists on card
+  checklist:create <CARD_ID> -n NAME  Create checklist on card
+  checklist:delete <CHECKLIST_ID>     Delete checklist
+  checklist:add <CHECKLIST_ID> -n NAME [--checked]
+                                      Add item to checklist
+  checklist:update <CARD_ID> <ITEM_ID> [-n NAME] [--check] [--uncheck] [--resolution TEXT]
+                                      Update checklist item
+  checklist:remove <CHECKLIST_ID> <ITEM_ID>
+                                      Remove checklist item
   migrate:from-trello-yaml <FILE>     Import from old trello.yaml
   version                             Show version
   help                                Show this help
@@ -181,8 +194,32 @@ async function main(): Promise<void> {
 
   switch (command) {
     case 'boards':
-      await cmdBoards(adapter);
+      await cmdBoards(adapter, config);
       break;
+
+    case 'boards:add': {
+      const boardArg = args[1];
+      if (!boardArg) {
+        console.error('Usage: agentbase boards:add <BOARD_ID> [--alias ALIAS] [--name NAME]');
+        process.exit(1);
+      }
+      const alias = getFlag(args, '', '--alias');
+      const nameFlag = getFlag(args, '', '--name');
+      const { cmdBoardsAdd } = await import('./commands/boards.js');
+      await cmdBoardsAdd(adapter, boardArg, { alias, name: nameFlag });
+      break;
+    }
+
+    case 'boards:remove': {
+      const target = args[1];
+      if (!target) {
+        console.error('Usage: agentbase boards:remove <ALIAS_OR_ID>');
+        process.exit(1);
+      }
+      const { cmdBoardsRemove } = await import('./commands/boards.js');
+      await cmdBoardsRemove(target);
+      break;
+    }
 
     case 'lists': {
       const boardId = getBoardId(config, args);
@@ -300,7 +337,59 @@ async function main(): Promise<void> {
     case 'snapshot': {
       const boardId = getBoardId(config, args);
       const outfile = getFlag(args, '-o', '--output') || './board-snapshot.yaml';
-      await cmdSnapshot(adapter, boardId, outfile);
+      await cmdSnapshot(adapter, boardId, outfile, configDir);
+      break;
+    }
+
+    case 'checklist:list': {
+      const cardId = args[1];
+      if (!cardId) { console.error('Usage: agentbase checklist:list <CARD_ID>'); process.exit(1); }
+      await cmdChecklists(adapter, cardId, configDir);
+      break;
+    }
+
+    case 'checklist:create': {
+      const cardId = args[1];
+      const name = getFlag(args, '-n', '--name');
+      if (!cardId || !name) { console.error('Usage: agentbase checklist:create <CARD_ID> -n NAME'); process.exit(1); }
+      await cmdChecklistCreate(adapter, cardId, name);
+      break;
+    }
+
+    case 'checklist:delete': {
+      const checklistId = args[1];
+      if (!checklistId) { console.error('Usage: agentbase checklist:delete <CHECKLIST_ID>'); process.exit(1); }
+      await cmdChecklistDelete(adapter, checklistId);
+      break;
+    }
+
+    case 'checklist:add': {
+      const checklistId = args[1];
+      const name = getFlag(args, '-n', '--name');
+      if (!checklistId || !name) { console.error('Usage: agentbase checklist:add <CHECKLIST_ID> -n NAME [--checked]'); process.exit(1); }
+      const checked = hasFlag(args, '--checked');
+      await cmdCheckItemAdd(adapter, checklistId, name, checked || undefined);
+      break;
+    }
+
+    case 'checklist:update': {
+      const cardId = args[1];
+      const itemId = args[2];
+      if (!cardId || !itemId) { console.error('Usage: agentbase checklist:update <CARD_ID> <ITEM_ID> [-n NAME] [--check] [--uncheck] [--resolution TEXT]'); process.exit(1); }
+      const name = getFlag(args, '-n', '--name');
+      const check = hasFlag(args, '--check');
+      const uncheck = hasFlag(args, '--uncheck');
+      const resolution = getFlag(args, '', '--resolution');
+      const state = check ? 'complete' as const : uncheck ? 'incomplete' as const : undefined;
+      await cmdCheckItemUpdate(adapter, cardId, itemId, { name, state, resolution }, configDir);
+      break;
+    }
+
+    case 'checklist:remove': {
+      const checklistId = args[1];
+      const itemId = args[2];
+      if (!checklistId || !itemId) { console.error('Usage: agentbase checklist:remove <CHECKLIST_ID> <ITEM_ID>'); process.exit(1); }
+      await cmdCheckItemDelete(adapter, checklistId, itemId);
       break;
     }
 
