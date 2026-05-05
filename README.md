@@ -32,7 +32,7 @@ AI agents interacting with Trello (or any board tool) create **duplicate cards c
 |---|---|---|---|
 | **Language** | TypeScript | TypeScript | Haskell |
 | **Runtime deps** | **0** | Many | Many |
-| **Multi-vendor** | ✅ Trello + Markdown | Trello only | Trello only |
+| **Multi-vendor** | ✅ Trello + GitHub Projects + Markdown | Trello only | Trello only |
 | **Managed records** | ✅ Built-in dedup | ❌ | ❌ |
 | **Agent-safe** | ✅ Upsert by key | ❌ | ❌ |
 | **Snapshot** | ✅ Vendor-agnostic YAML | ❌ | ❌ |
@@ -200,6 +200,67 @@ markdown:
 ```
 
 No API keys needed. Data stored as local markdown files with YAML front matter.
+
+#### GitHub Projects v2 vendor
+
+```yaml
+vendor: github-projects
+github_projects:
+  # Either project_id (node ID) or project_ref ("<owner>/<number>")
+  project_id: "PVT_kwHOAkzs9M4BWuDO"
+  # Optional: list multiple boards with aliases
+  boards:
+    - id: "PVT_kwHOAkzs9M4BWuDO"
+      name: "reddit-tracking"
+      alias: "reddit"
+    - id: "gotexis/12"          # owner/number form is auto-resolved
+      name: "backlog"
+      alias: "backlog"
+```
+
+**Auth.** Set `GITHUB_TOKEN` (or `GH_TOKEN`) to a Personal Access Token with the
+`project` scope. A fine-grained token needs **"Projects" → Read & Write**;
+a classic token needs `repo`, `read:org`, and `project`. If neither env var
+is set, agentbase falls back to `gh auth token`.
+
+**Find your project's node ID:**
+
+```bash
+gh project list --owner @me            # your user projects
+gh project list --owner <org>          # org projects
+# the 4th column (PVT_xxx) is the node ID
+```
+
+**Concept mapping**
+
+| agentbase  | GitHub Projects v2                            |
+|------------|-----------------------------------------------|
+| Board      | `ProjectV2`                                   |
+| List       | Option of the `Status` single-select field    |
+| Card       | `ProjectV2Item` (DraftIssue by default)       |
+| `card.due` | `Due` Date field if present, else body footer |
+| Comments   | Issue comments (Issue-backed items only)      |
+| Checklists | Markdown `- [ ] / - [x]` task lists in body   |
+
+**Limitations**
+
+- **Labels** are Issue-only. DraftIssue items ignore the `--label` flag (with a
+  stderr warning). Convert a Draft to a real Issue via the GitHub UI to gain
+  labels.
+- **Comments** on DraftIssue items are appended to the body under a
+  `## Comments` heading instead of using the comments API.
+- **Checklists** are stored as markdown task lists under `## Checklist: <name>`
+  headings inside the item body. Item IDs are derived from a stable
+  `(checklist, position, name)` hash so they survive re-reads. There is no
+  programmatic checklist API in v2, so this is the canonical workaround.
+- **Archive** uses `archiveProjectV2Item` — the item is hidden from the default
+  view but retained.
+- **Rate limit**: GitHub allows 5,000 GraphQL points/hour for authenticated
+  requests. Each `cards`/`snapshot` call paginates 100 items at a time.
+
+**Required field.** Your project must have a `Status` single-select field —
+this is the default for new GitHub Projects. agentbase treats its options as
+lists.
 
 ## Managed Records
 

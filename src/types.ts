@@ -81,6 +81,12 @@ export interface BoardConfig {
   id: string;
   name: string;
   alias?: string;
+  /** Optional vendor hint for per-board overrides (e.g. when mixing vendors). */
+  vendor?: string;
+  /** github-projects: pre-resolved Status field id (perf cache). */
+  statusFieldId?: string;
+  /** github-projects: optional default Status option name for new cards. */
+  defaultListOption?: string;
 }
 
 export interface AgentbaseConfig {
@@ -92,6 +98,17 @@ export interface AgentbaseConfig {
   markdown?: {
     dir: string;
     format?: string;
+  };
+  /**
+   * GitHub Projects v2 config. `project_id` is the ProjectV2 node ID (PVT_xxx).
+   * `project_ref` is `<owner>/<projectNumber>` and is resolved at startup.
+   */
+  github_projects?: {
+    project_id?: string;
+    project_ref?: string;
+    boards?: BoardConfig[];
+    status_field_id?: string;
+    default_list_option?: string;
   };
   resolutions?: Resolution[];
 }

@@ -6,13 +6,20 @@ import type { VendorAdapter, AgentbaseConfig } from '../types.js';
 import { loadFullConfig, saveConfig } from '../config.js';
 
 export async function cmdBoards(adapter: VendorAdapter, config?: AgentbaseConfig): Promise<void> {
-  const boards = config?.trello?.boards;
-  if (boards && boards.length > 0) {
+  const trelloBoards = config?.trello?.boards;
+  const ghBoards = config?.github_projects?.boards;
+  if ((trelloBoards && trelloBoards.length > 0) || (ghBoards && ghBoards.length > 0)) {
     console.log('Configured boards:');
-    for (const b of boards) {
+    for (const b of trelloBoards || []) {
       const isDefault = b.id === config?.trello?.board_id ? ' (default)' : '';
       const alias = b.alias ? ` [${b.alias}]` : '';
-      console.log(`  ${b.name}${alias} — ${b.id}${isDefault}`);
+      console.log(`  trello: ${b.name}${alias} — ${b.id}${isDefault}`);
+    }
+    for (const b of ghBoards || []) {
+      const isDefault =
+        b.id === config?.github_projects?.project_id ? ' (default)' : '';
+      const alias = b.alias ? ` [${b.alias}]` : '';
+      console.log(`  github-projects: ${b.name}${alias} — ${b.id}${isDefault}`);
     }
     return;
   }

@@ -27,6 +27,7 @@
 import { loadConfig } from './config.js';
 import { TrelloAdapter } from './vendors/trello.js';
 import { MarkdownAdapter } from './vendors/markdown.js';
+import { GithubProjectsAdapter } from './vendors/github-projects.js';
 import { cmdBoards } from './commands/boards.js';
 import { cmdLists } from './commands/lists.js';
 import { cmdLabels } from './commands/labels.js';
@@ -48,6 +49,8 @@ function createAdapter(config: AgentbaseConfig, configDir: string): VendorAdapte
   switch (config.vendor) {
     case 'trello':
       return new TrelloAdapter();
+    case 'github-projects':
+      return new GithubProjectsAdapter();
     case 'markdown': {
       const dir = config.markdown?.dir || './boards';
       const resolvedDir = resolve(configDir, dir);
@@ -55,7 +58,7 @@ function createAdapter(config: AgentbaseConfig, configDir: string): VendorAdapte
     }
     default:
       console.error(`Unknown vendor: ${config.vendor}`);
-      console.error('Supported vendors: trello, markdown');
+      console.error('Supported vendors: trello, github-projects, markdown');
       process.exit(1);
   }
 }
@@ -63,26 +66,32 @@ function createAdapter(config: AgentbaseConfig, configDir: string): VendorAdapte
 function getBoardId(config: AgentbaseConfig, args: string[]): string {
   const bFlag = getFlag(args, '-b', '--board');
   if (bFlag) {
-    // Resolve alias or name against configured boards
-    const boards = config.trello?.boards || [];
-    const byAlias = boards.find(b => b.alias === bFlag);
+    // Resolve alias or name against configured boards (trello + github_projects)
+    const allBoards = [
+      ...(config.trello?.boards || []),
+      ...(config.github_projects?.boards || []),
+    ];
+    const byAlias = allBoards.find(b => b.alias === bFlag);
     if (byAlias) return byAlias.id;
-    const byName = boards.find(b => b.name.toLowerCase() === bFlag.toLowerCase());
+    const byName = allBoards.find(b => b.name.toLowerCase() === bFlag.toLowerCase());
     if (byName) return byName.id;
-    // Assume raw board ID
+    // Assume raw board ID / project ref
     return bFlag;
   }
 
   // Fall back to config
   if (config.trello?.board_id) return config.trello.board_id;
   if (config.trello?.boards?.[0]) return config.trello.boards[0].id;
+  if (config.github_projects?.project_id) return config.github_projects.project_id;
+  if (config.github_projects?.project_ref) return config.github_projects.project_ref;
+  if (config.github_projects?.boards?.[0]) return config.github_projects.boards[0].id;
 
   if (config.vendor === 'markdown') {
     console.error('Error: Board ID required. Use -b BOARD_ID');
     process.exit(1);
   }
 
-  console.error('Error: Board ID required. Set trello.board_id in config or use -b BOARD_ID');
+  console.error('Error: Board ID required. Set vendor board_id/project_id in config or use -b BOARD_ID');
   process.exit(1);
 }
 
