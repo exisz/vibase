@@ -302,6 +302,34 @@ agentbase uses a vendor adapter pattern. Each backend implements the same interf
 |--------|---------|------|--------|
 | `trello` | Trello REST API | `TRELLO_KEY` + `TRELLO_TOKEN` | ✅ Stable |
 | `markdown` | Local markdown files | None needed | ✅ Stable |
+| `github-projects` | GitHub Projects v2 GraphQL | `GITHUB_TOKEN` w/ `project` scope (or `gh auth`) | ✅ Stable |
+
+### Mixing vendors in one config
+
+You can talk to multiple vendor backends from a single config by setting a
+per-board `vendor:` override. The top-level `vendor:` becomes the default; any
+board with its own `vendor:` is routed to the matching adapter on demand.
+
+```yaml
+vendor: trello                     # default for boards without a vendor: line
+trello:
+  boards:
+    - id: <trello-board-id>
+      name: My Trello Board
+      alias: tb
+      vendor: trello
+github_projects:
+  boards:
+    - id: PVT_xxx                  # ProjectV2 node ID, or owner/number
+      name: My GH Project
+      alias: ghp
+      vendor: github-projects
+```
+
+```bash
+agentbase lists -b tb       # uses Trello adapter
+agentbase lists -b ghp      # uses GitHub Projects adapter — same config
+```
 
 **Want to add a vendor?** Implement the `VendorAdapter` interface. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -314,6 +342,30 @@ agentbase migrate:from-trello-yaml ./trello.yaml
 ```
 
 This reads the old format and writes `.agentbase/managed.yaml` + `.agentbase/agentbase.yml`.
+
+## One-shot migration scripts
+
+For cross-vendor migrations (e.g. Trello → GitHub Projects v2), the
+`scripts/` directory contains reference one-shots:
+
+- [`scripts/migrate-rffi-trello-to-gh.ts`](scripts/migrate-rffi-trello-to-gh.ts)
+  — migrates a **correspondence-versioned** Trello board (Library cards as
+  canonical + per-round reference cards linking back) to a GH Project where
+  the round axis lives in custom fields rather than lists. Runs dry-run by
+  default; pass `--apply` to write. Use it as a template for similar
+  vendor-to-vendor migrations:
+
+  ```bash
+  npx tsx scripts/migrate-rffi-trello-to-gh.ts            # dry-run
+  npx tsx scripts/migrate-rffi-trello-to-gh.ts --apply    # write
+  ```
+
+  Patterns it demonstrates:
+  - Submission-log regex parsing → structured DATE/TEXT fields
+  - Multi-list → multi-value text field (`Asked in rounds`)
+  - Per-round status flags preserved both as a structured field and as a
+    Markdown table at the bottom of the body under `## Original notes` so
+    nothing is lost on round-trip.
 
 ## License
 

@@ -64,27 +64,37 @@ function createAdapter(config: AgentbaseConfig, configDir: string): VendorAdapte
 }
 
 function getBoardId(config: AgentbaseConfig, args: string[]): string {
+  return resolveBoard(config, args).boardId;
+}
+
+/**
+ * Resolve a board reference (-b flag or default) to {boardId, vendor}.
+ * Per-board `vendor:` override (BoardConfig.vendor) lets a single config talk
+ * to multiple vendor backends (e.g. Trello board + GH Projects board side by
+ * side).
+ */
+function resolveBoard(config: AgentbaseConfig, args: string[]): { boardId: string; vendor: string } {
   const bFlag = getFlag(args, '-b', '--board');
+  const trelloBoards = (config.trello?.boards || []).map(b => ({ ...b, _src: 'trello' }));
+  const ghBoards = (config.github_projects?.boards || []).map(b => ({ ...b, _src: 'github-projects' }));
+  const allBoards = [...trelloBoards, ...ghBoards];
+
   if (bFlag) {
-    // Resolve alias or name against configured boards (trello + github_projects)
-    const allBoards = [
-      ...(config.trello?.boards || []),
-      ...(config.github_projects?.boards || []),
-    ];
-    const byAlias = allBoards.find(b => b.alias === bFlag);
-    if (byAlias) return byAlias.id;
-    const byName = allBoards.find(b => b.name.toLowerCase() === bFlag.toLowerCase());
-    if (byName) return byName.id;
-    // Assume raw board ID / project ref
-    return bFlag;
+    const match = allBoards.find(b => b.alias === bFlag) ||
+                  allBoards.find(b => b.name.toLowerCase() === bFlag.toLowerCase());
+    if (match) {
+      return { boardId: match.id, vendor: match.vendor || match._src };
+    }
+    // Raw ID / ref — assume the configured top-level vendor.
+    return { boardId: bFlag, vendor: config.vendor };
   }
 
-  // Fall back to config
-  if (config.trello?.board_id) return config.trello.board_id;
-  if (config.trello?.boards?.[0]) return config.trello.boards[0].id;
-  if (config.github_projects?.project_id) return config.github_projects.project_id;
-  if (config.github_projects?.project_ref) return config.github_projects.project_ref;
-  if (config.github_projects?.boards?.[0]) return config.github_projects.boards[0].id;
+  // Fall back to config defaults — match the original precedence.
+  if (config.trello?.board_id) return { boardId: config.trello.board_id, vendor: 'trello' };
+  if (config.trello?.boards?.[0]) return { boardId: config.trello.boards[0].id, vendor: 'trello' };
+  if (config.github_projects?.project_id) return { boardId: config.github_projects.project_id, vendor: 'github-projects' };
+  if (config.github_projects?.project_ref) return { boardId: config.github_projects.project_ref, vendor: 'github-projects' };
+  if (config.github_projects?.boards?.[0]) return { boardId: config.github_projects.boards[0].id, vendor: 'github-projects' };
 
   if (config.vendor === 'markdown') {
     console.error('Error: Board ID required. Use -b BOARD_ID');
@@ -93,6 +103,12 @@ function getBoardId(config: AgentbaseConfig, args: string[]): string {
 
   console.error('Error: Board ID required. Set vendor board_id/project_id in config or use -b BOARD_ID');
   process.exit(1);
+}
+
+/** Get the right adapter for a board, swapping if its vendor differs from default. */
+function adapterFor(vendor: string, defaultAdapter: VendorAdapter, config: AgentbaseConfig, configDir: string): VendorAdapter {
+  if (vendor === config.vendor) return defaultAdapter;
+  return createAdapter({ ...config, vendor }, configDir);
 }
 
 function getFlag(args: string[], short: string, long: string): string | undefined {
@@ -267,21 +283,21 @@ async function main(): Promise<void> {
     }
 
     case 'lists': {
-      const boardId = getBoardId(config, args);
-      await cmdLists(adapter, boardId);
+      const r = resolveBoard(config, args);
+      await cmdLists(adapterFor(r.vendor, adapter, config, configDir), r.boardId);
       break;
     }
 
     case 'labels': {
-      const boardId = getBoardId(config, args);
-      await cmdLabels(adapter, boardId);
+      const r = resolveBoard(config, args);
+      await cmdLabels(adapterFor(r.vendor, adapter, config, configDir), r.boardId);
       break;
     }
 
     case 'cards': {
-      const boardId = getBoardId(config, args);
+      const r = resolveBoard(config, args);
       const listId = getFlag(args, '-l', '--list');
-      await cmdCards(adapter, boardId, listId);
+      await cmdCards(adapterFor(r.vendor, adapter, config, configDir), r.boardId, listId);
       break;
     }
 
@@ -380,9 +396,9 @@ async function main(): Promise<void> {
       break;
 
     case 'snapshot': {
-      const boardId = getBoardId(config, args);
+      const r = resolveBoard(config, args);
       const outfile = getFlag(args, '-o', '--output') || './board-snapshot.yaml';
-      await cmdSnapshot(adapter, boardId, outfile, configDir);
+      await cmdSnapshot(adapterFor(r.vendor, adapter, config, configDir), r.boardId, outfile, configDir);
       break;
     }
 
